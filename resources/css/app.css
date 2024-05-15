@@ -1,0 +1,9 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* In your CSS or SCSS file */
+*
+{
+    scrollbar-width: none !important;
+}
