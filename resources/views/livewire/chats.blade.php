@@ -4,16 +4,16 @@
         <!-- Contact List -->
         <div class="w-full h-full absolute p-4">
             @foreach($contacts as $contact)
-            <div class="flex items-center gap-2 my-5 cursor-pointer" wire:click="setSelectedUser({{$contact->id}})">
+            <div class="flex items-center gap-2 my-5 cursor-pointer" wire:click="setSelectedUser({{$contact['user']->id}})">
                 <div class="min-w-14 h-14 relative border-2 overflow-hidden rounded-full">
                     <img src="{{asset('1.png')}}" alt="" class="w-full h-full absolute">
                 </div>
                 <div class="flex flex-col overflow-hidden w-full">
                     <div class="relative">
-                        <span class="truncate font-semibold">{{$contact->name}}</span>
-                        <span class="bg-blue-200 text-gray-600 text-sm w-5 h-5 text-center absolute right-0 rounded-full">2</span>
+                        <span class="truncate font-semibold">{{ $contact['user']->name }}</span>
+                        <span class="bg-blue-200 text-gray-600 text-sm w-5 h-5 text-center absolute right-0 rounded-full">{{ $contact['user']?->messages_count }}</span>
                     </div>
-                    <span class="truncate text-sm text-gray-400">{{$contact->lastMessage->message ?? 'x'}}</span>
+                    <span class="truncate text-sm text-gray-400">{{ $contact['lastmessage']}}</span>
                     <hr class="mt-1">
                 </div>
             </div>
@@ -25,13 +25,13 @@
     <div class="w-full h-full md:w-3/4 bg-blue-50 p-4 flex flex-col relative {{$selectedUser != 0 ? 'block' : 'hidden'}} md:flex">
         <!-- Chat Header -->
         @foreach($contacts as $contact)
-        @if($selectedUser == $contact->id)
+        @if($selectedUser == $contact['user']->id)
         <div class="flex items-center gap-3 bg-white rounded-t-lg p-2">
             <i class="bi bi-chevron-left" wire:click="setSelectedUser(0)"></i>
             <div class="min-w-14 h-14 relative border-2 overflow-hidden rounded-full">
                 <img src="{{asset('1.png')}}" alt="" class="w-full h-full absolute">
             </div>
-            <h3 class="text-lg font-semibold text-gray-800">{{$contact->name}}</h3>
+            <h3 class="text-lg font-semibold text-gray-800">{{$contact['user']->name}}</h3>
         </div>
         @endif
         @endforeach
@@ -47,7 +47,7 @@
                 </div>
                 <!-- Received Message -->
                 @foreach($conversations as $conversation)
-                @if ($conversation->user_id == Auth()->user()->chats_id)
+                @if ($conversation->user_id != Auth::id())
                 <div class="flex items-start mb-4">
                     <div class="bg-gray-200 rounded-lg p-3 {{ $conversation->photo ? '' : '' }}">
                         @if($conversation->photo)
