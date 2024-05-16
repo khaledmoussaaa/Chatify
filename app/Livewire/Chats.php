@@ -37,7 +37,7 @@ class Chats extends Component
         $this->updateSeen();
 
         return view('livewire.chats', [
-            'contacts' => $this->newContacts(),
+            'contacts' => $this->conacts(),
             'conversations' => $this->selectedUser ? $this->conversations($this->selectedUser) : collect(),
         ]);
     }
@@ -106,6 +106,52 @@ class Chats extends Component
     // Contacts
     public function conacts()
     {
+
+        $usersWithLastMessages = collect();
+
+        // Get All Users Unique Has Message
+        $allUserIds = Messages::where('user_id', $this->auth)
+            ->orWhere('recipient_id', $this->auth)
+            ->distinct()
+            ->pluck('user_id')
+            ->merge(Messages::where('recipient_id', $this->auth)
+                ->orWhere('user_id', $this->auth)
+                ->distinct()
+                ->pluck('recipient_id'))
+            ->unique();
+
+        $allUserIds = $allUserIds->reject(function ($userId) {
+            return $userId == $this->auth;
+        });
+
+        foreach ($allUserIds as $userId) {
+            $latestMessage = Messages::whereIn('user_id', [$this->auth, $userId])
+                ->whereIn('recipient_id', [$this->auth, $userId])
+                ->latest()
+                ->first();
+
+            if ($latestMessage) {
+                $lastMessageInSession = session("last_message_$userId", '');
+
+                if ($lastMessageInSession != $latestMessage->message) {
+                    session(["last_message_$userId" => $latestMessage->message]);
+                    $this->dispatch('scrollBottom');
+                }
+
+                $users = User::withCount(['messages' => function ($query) {
+                    $query->where('seen', 0);
+                }])->where('id', $userId)->first();
+
+                $message = $latestMessage->message;
+
+                $usersWithLastMessages->push([
+                    'user' => $users,
+                    'lastmessage' => $message,
+                    'lastmessage_time' => $latestMessage->created_at->format('h:i A'),
+                ]);
+            }
+        }
+        return $usersWithLastMessages;
     }
 
     // New Contacts
